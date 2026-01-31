@@ -1,0 +1,6 @@
+@Food_Rescue_HostAddress = http://localhost:5285
+
+GET {{Food_Rescue_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
