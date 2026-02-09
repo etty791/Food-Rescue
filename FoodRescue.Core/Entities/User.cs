@@ -6,16 +6,19 @@ using System.Threading.Tasks;
 
 namespace FoodRescue.Core.Entities
 {
-    public class User
+	public enum eRole
+	{
+		Admin,   
+		Business, 
+		Charity   
+	}
+	public class User
     {
         public int Id { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }  
-        public eType Type { get; set; }
-        public enum eType
-        {
-            Business,Charity
-        }
+        public eRole Role { get; set; }
+        
 
     }
 }

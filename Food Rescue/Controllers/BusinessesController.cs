@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using FoodRescue.Core.DTO;
 using Food_Rescue.Models;
+using FoodRescue.Service;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace FoodRescue.API.Controllers
@@ -14,10 +15,14 @@ namespace FoodRescue.API.Controllers
 	{
 		private readonly IBusinessService _businessService;
 		private readonly IMapper _mapper;
-		public BusinessesController(IBusinessService businessService, IMapper map)
+		private readonly IUserService _userService;
+
+
+		public BusinessesController(IBusinessService businessService, IMapper map, IUserService userService)
 		{
 			_businessService = businessService;
 			_mapper = map;
+			_userService = userService;
 		}
 		// GET: api/<BusinessesController>
 		[HttpGet]
@@ -43,26 +48,42 @@ namespace FoodRescue.API.Controllers
 		[HttpPost]
 		public async Task<ActionResult> Post([FromBody] BusinessPostModel value)
 		{
-			var business = _mapper.Map<Business>(value);
-			var b =await _businessService.GetBusinessByNameAsync(value.Name);
-			if (b == null)
+			if (await _userService.IsUserNameTakenAsync(value.UserName))
 			{
-				await _businessService.AddBusinessAsync(business);
-				return Ok();
+				return Conflict("User name already exists");
 			}
-			return Conflict();
+
+			var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
+			var createdUser = await _userService.AddUserAsync(user);
+
+			var business = _mapper.Map<Business>(value);
+			business.User = createdUser;
+			business.UserId = createdUser.Id;
+
+			await _businessService.AddBusinessAsync(business);
+
+			return Ok(); 
+			
 		}
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]
 		public async Task<ActionResult> Put(int id, [FromBody] BusinessPostModel value)
 		{
+
 			var business = _mapper.Map<Business>(value);
 			business.Id = id;
 			var b =await _businessService.GetBusinessByNameAsync(value.Name);
 			if (b == null)
 			{
 				return NotFound();
+			}
+			var user = await _userService.GetUserByIdAsync(business.UserId);
+			if (user != null)
+			{
+				user.UserName = value.UserName;
+				user.Password = value.Password;
+				await _userService.UpdateUserAsync(user.Id, user);
 			}
 			await _businessService.UpdateBusinessAsync(id, business);
 			return Ok();
@@ -77,9 +98,9 @@ namespace FoodRescue.API.Controllers
 			{
 				return NotFound();
 			}
+			await _userService.DeleteUserAsync(b.UserId);
 			await _businessService.DeleteBusinessAsync(id);
 			return Ok();
-
 		}
 
 	}
