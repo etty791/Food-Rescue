@@ -3,7 +3,9 @@ using Food_Rescue.Models;
 using FoodRescue.Core.DTO;
 using FoodRescue.Core.Entities;
 using FoodRescue.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -11,14 +13,17 @@ namespace FoodRescue.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[Authorize]
 	public class DonationController : ControllerBase
 	{
 		private readonly IDonationService _donationService;
 		private readonly IMapper _mapper;
-		public DonationController(IDonationService donationService, IMapper mapper)
+		private readonly IBusinessService _businessService;
+		public DonationController(IDonationService donationService, IMapper mapper, IBusinessService businessService)
 		{
 			_donationService = donationService;
 			_mapper = mapper;
+			_businessService = businessService;
 		}
 		// GET: api/<BusinessesController>
 		[HttpGet]
@@ -42,15 +47,28 @@ namespace FoodRescue.API.Controllers
 
 		// POST api/<BusinessesController>
 		[HttpPost]
+		[Authorize(Roles = "Business")]
 		public async Task<ActionResult> Post([FromBody] DonationPostModel value)
 		{
+			// 1. חילוץ ה-UserId מהטוקן
+			var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+			if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId)) return Unauthorized();
+
+			// 2. שליפה נקייה ויעילה של העסק הספציפי!
+			var myBusiness = await _businessService.GetBusinessByUserIdAsync(userId);
+			if (myBusiness == null) return BadRequest("לא נמצא עסק התואם למשתמש המחובר.");
+
+			// 3. קישור התרומה לעסק ושמירה
 			var donation = _mapper.Map<Donation>(value);
+			donation.BusinessID = myBusiness.Id;
 			await _donationService.AddDonationAsync(donation);
+
 			return Ok(donation);
 		}
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]
+		[Authorize(Roles = "Business")]
 		public async Task<ActionResult> Put(int id, [FromBody] DonationPostModel value)
 		{
 			var donation = _mapper.Map<Donation>(value);
@@ -66,6 +84,7 @@ namespace FoodRescue.API.Controllers
 
 		// DELETE api/<BusinessesController>/5
 		[HttpDelete("{id}")]
+		[Authorize(Roles = "Business")]
 		public async Task<ActionResult> Delete(int id)
 		{
 			var s =await _donationService.GetDonationByIdAsync(id);
@@ -76,6 +95,32 @@ namespace FoodRescue.API.Controllers
 			await _donationService.DeleteDonationAsync(id);
 			return Ok(s);
 
+		}
+
+		[HttpGet("my")]
+		[Authorize(Roles = "Business")]
+		public async Task<ActionResult> GetMyDonations()
+		{
+			// 1. חילוץ מזהה המשתמש מהטוקן
+			var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+
+			if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+			{
+				return Unauthorized("לא ניתן לזהות את המשתמש מהטוקן.");
+			}
+
+			// 2. שליפה נקייה ויעילה של העסק ישירות ממסד הנתונים!
+			var myBusiness = await _businessService.GetBusinessByUserIdAsync(userId);
+
+			if (myBusiness == null)
+			{
+				return BadRequest("לא נמצא עסק התואם למשתמש המחובר.");
+			}
+
+			// 3. שליפת התרומות של העסק הזה והמרתן ל-DTO
+			var myDonations = await _donationService.GetDonationsByBusinessIdAsync(myBusiness.Id);
+
+			return Ok(_mapper.Map<IEnumerable<DonationDTO>>(myDonations));
 		}
 	}
 }

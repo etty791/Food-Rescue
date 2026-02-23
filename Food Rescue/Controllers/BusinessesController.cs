@@ -5,12 +5,14 @@ using AutoMapper;
 using FoodRescue.Core.DTO;
 using Food_Rescue.Models;
 using FoodRescue.Service;
+using Microsoft.AspNetCore.Authorization;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace FoodRescue.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
+	[Authorize]
 	public class BusinessesController : ControllerBase
 	{
 		private readonly IBusinessService _businessService;
@@ -46,6 +48,7 @@ namespace FoodRescue.API.Controllers
 
 		// POST api/<BusinessesController>
 		[HttpPost]
+		[AllowAnonymous]
 		public async Task<ActionResult> Post([FromBody] BusinessPostModel value)
 		{
 			if (await _userService.IsUserNameTakenAsync(value.UserName))
@@ -68,6 +71,7 @@ namespace FoodRescue.API.Controllers
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]
+		[Authorize(Roles = "Business")]
 		public async Task<ActionResult> Put(int id, [FromBody] BusinessPostModel value)
 		{
 

@@ -12,7 +12,7 @@ namespace FoodRescue.Core.Repositories
 		public Task<IEnumerable<Business>> GetAllAsync();
 		public Task<Business> GetByIdAsync(int id);
 		public Task<Business> GetByNameAsync(string name);
-
+		public Task<Business> GetByUserIdAsync(int userId);
 		public Task AddAsync(Business val);
 		public Task DeleteAsync(int id);
 		public Task UpdateAsync(int id, Business value);

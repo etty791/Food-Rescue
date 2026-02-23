@@ -49,6 +49,9 @@ namespace FoodRescue.Service
 		{
 			return await _businessRepository.GetByNameAsync(name);
 		}
-
+		public async Task<Business> GetBusinessByUserIdAsync(int userId)
+		{
+			return await _businessRepository.GetByUserIdAsync(userId);
+		}
 	}
 }

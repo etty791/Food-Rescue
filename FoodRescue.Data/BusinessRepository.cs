@@ -38,7 +38,10 @@ namespace FoodRescue.Data
 		{
 			return await _context.businesses.FirstOrDefaultAsync(x => x.Id == id);
 		}
-
+		public async Task<Business> GetByUserIdAsync(int userId)
+		{
+			return await _context.businesses.FirstOrDefaultAsync(b => b.UserId == userId);
+		}
 		public async Task UpdateAsync(int id,Business value)
 		{
 			var s = await GetByIdAsync(value.Id);

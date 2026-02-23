@@ -1,4 +1,5 @@
 ﻿using FoodRescue.Core.Entities;
+using FoodRescue.Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +16,7 @@ namespace FoodRescue.Core.Services
 		public Task AddBusinessAsync(Business val);
 		public Task DeleteBusinessAsync(int id);
 		public Task UpdateBusinessAsync(int id,Business val);
+		// בתוך FoodRescue.Core/Services/IBusinessService.cs
+		public Task<Business> GetBusinessByUserIdAsync(int userId);
 	}
 }

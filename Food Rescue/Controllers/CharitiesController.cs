@@ -4,6 +4,7 @@ using FoodRescue.Core.DTO;
 using FoodRescue.Core.Entities;
 using FoodRescue.Core.Services;
 using FoodRescue.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -68,6 +69,7 @@ namespace FoodRescue.API.Controllers
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]
+		[Authorize(Roles = "Charity")]
 		public async Task<ActionResult> Put(int id, [FromBody] CharityPostModel value)
 		{
 			var charity = _mapper.Map<Charity>(value);
