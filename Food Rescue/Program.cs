@@ -43,6 +43,14 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile), typeof(Mapping));
 
+var policy = "policy";
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy(name: policy, policy =>
+	{
+		policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+	});
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -72,9 +80,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
-
+app.UseCors(policy);
 app.UseAuthorization();
 
 app.MapControllers();

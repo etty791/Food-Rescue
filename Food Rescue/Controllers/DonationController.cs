@@ -13,7 +13,7 @@ namespace FoodRescue.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	[Authorize]
+	//[Authorize]
 	public class DonationController : ControllerBase
 	{
 		private readonly IDonationService _donationService;
