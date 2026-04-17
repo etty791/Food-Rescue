@@ -47,27 +47,27 @@ namespace FoodRescue.API.Controllers
 		}
 
 		// POST api/<BusinessesController>
-		[HttpPost]
-		[AllowAnonymous]
-		public async Task<ActionResult> Post([FromBody] BusinessPostModel value)
-		{
-			if (await _userService.IsUserNameTakenAsync(value.UserName))
-			{
-				return Conflict("User name already exists");
-			}
+		//[HttpPost]
+		//[AllowAnonymous]
+		//public async Task<ActionResult> Post([FromBody] BusinessPostModel value)
+		//{
+		//	if (await _userService.IsUserNameTakenAsync(value.UserName))
+		//	{
+		//		return Conflict("User name already exists");
+		//	}
 
-			var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
-			var createdUser = await _userService.AddUserAsync(user);
+		//	var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
+		//	var createdUser = await _userService.AddUserAsync(user);
 
-			var business = _mapper.Map<Business>(value);
-			business.User = createdUser;
-			business.UserId = createdUser.Id;
+		//	var business = _mapper.Map<Business>(value);
+		//	business.User = createdUser;
+		//	business.UserId = createdUser.Id;
 
-			await _businessService.AddBusinessAsync(business);
+		//	await _businessService.AddBusinessAsync(business);
 
-			return Ok(); 
+		//	return Ok(); 
 			
-		}
+		//}
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]

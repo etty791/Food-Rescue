@@ -1,4 +1,7 @@
-﻿using FoodRescue.Core.Entities;
+﻿
+using AutoMapper;
+using Food_Rescue.Models;
+using FoodRescue.Core.Entities;
 using FoodRescue.Core.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,22 +18,29 @@ namespace Food_Rescue.Controllers
 	{
 		private readonly IConfiguration _configuration;
 		private readonly IUserService _userService;
+		private readonly IBusinessService _businessService;
+		private readonly ICharityService _charityService;
+		private readonly IMapper _mapper;
 
-		public AuthController(IConfiguration configuration, IUserService userService)
+		// הזרקת כל התלויות שאנחנו צריכים
+		public AuthController(IConfiguration configuration,IUserService userService,IBusinessService businessService,ICharityService charityService,IMapper mapper)
 		{
 			_configuration = configuration;
 			_userService = userService;
+			_businessService = businessService;
+			_charityService = charityService;
+			_mapper = mapper;
 		}
 
 		[HttpPost("login")]
-		public async Task<ActionResult> Login([FromBody] User login)
+		public async Task<ActionResult> Login([FromBody] LoginModel login)
 		{
 			// 1. אימות המשתמש מול בסיס הנתונים
 			var user = await _userService.GetUserByCredentialsAsync(login.UserName, login.Password);
 
 			if (user != null)
 			{
-				// 2. יצירת רשימת ה"טענות" (Claims) - מה אנחנו יודעים על המשתמש
+				// 2. יצירת רשימת ה"טענות" (Claims)
 				var claims = new List<Claim>
 				{
 					new Claim(ClaimTypes.Name, user.UserName),
@@ -38,7 +48,7 @@ namespace Food_Rescue.Controllers
                     new Claim("UserId", user.Id.ToString())
 				};
 
-				// 3. יצירת מפתח הצפנה (חייב להיות זהה למה שנגדיר ב-Program.cs)
+				// 3. יצירת מפתח הצפנה
 				var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
 				var sc = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -51,12 +61,52 @@ namespace Food_Rescue.Controllers
 					signingCredentials: sc
 				);
 
-				// 5. שליחת הטוקן המקודד חזרה לקליינט (Angular)
+				// 5. שליחת הטוקן חזרה
 				return Ok(new JwtSecurityTokenHandler().WriteToken(token));
 			}
 
 			return Unauthorized("שם משתמש או סיסמה שגויים");
 		}
+
+		[HttpPost("register/business")]
+		public async Task<ActionResult> RegisterBusiness([FromBody] BusinessPostModel value)
+		{
+			if (await _userService.IsUserNameTakenAsync(value.UserName))
+			{
+				return Conflict("User name already exists");
+			}
+
+			var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
+			var createdUser = await _userService.AddUserAsync(user);
+
+			var business = _mapper.Map<Business>(value);
+			business.User = user;
+			business.UserId = user.Id;
+
+			await _businessService.AddBusinessAsync(business);
+
+			return Ok();
+		}
+
+
+		[HttpPost("register/charity")]
+		public async Task<ActionResult> RegisterCharity([FromBody] CharityPostModel value)
+		{
+			if (await _userService.IsUserNameTakenAsync(value.UserName))
+			{
+				return Conflict("User name already exists");
+			}
+
+			var userEntity = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Charity };
+			var createdUser = await _userService.AddUserAsync(userEntity);
+
+			var charity = _mapper.Map<Charity>(value);
+			charity.User = createdUser;
+			charity.UserId = createdUser.Id;
+
+			await _charityService.AddCharityAsync(charity);
+
+			return Ok();
+		}
 	}
 }
-
