@@ -47,7 +47,7 @@ namespace FoodRescue.API.Controllers
 
 		// POST api/<BusinessesController>
 		[HttpPost]
-		[Authorize(Roles = "Business")]
+		//[Authorize(Roles = "Business")]
 		public async Task<ActionResult> Post([FromBody] DonationPostModel value)
 		{
 			// 1. חילוץ ה-UserId מהטוקן

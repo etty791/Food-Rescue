@@ -68,6 +68,23 @@ namespace Food_Rescue.Controllers
 			return Unauthorized("שם משתמש או סיסמה שגויים");
 		}
 
+		[HttpPost("register")]
+		public async Task<ActionResult> Register([FromBody] User value) {
+			if (await _userService.IsUserNameTakenAsync(value.UserName))
+			{
+				return Conflict("User name already exists");
+			}
+
+			var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
+			var createdUser = await _userService.AddUserAsync(user);
+
+			var business = _mapper.Map<Business>(value);
+			business.User = user;
+			await _businessService.AddBusinessAsync(business);
+
+			return Ok();
+		}
+
 		[HttpPost("register/business")]
 		public async Task<ActionResult> RegisterBusiness([FromBody] BusinessPostModel value)
 		{
@@ -81,8 +98,6 @@ namespace Food_Rescue.Controllers
 
 			var business = _mapper.Map<Business>(value);
 			business.User = user;
-			business.UserId = user.Id;
-
 			await _businessService.AddBusinessAsync(business);
 
 			return Ok();
@@ -102,7 +117,6 @@ namespace Food_Rescue.Controllers
 
 			var charity = _mapper.Map<Charity>(value);
 			charity.User = createdUser;
-			charity.UserId = createdUser.Id;
 
 			await _charityService.AddCharityAsync(charity);
 

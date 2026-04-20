@@ -12,7 +12,7 @@ namespace FoodRescue.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	[Authorize]
+	//[Authorize]
 	public class BusinessesController : ControllerBase
 	{
 		private readonly IBusinessService _businessService;
@@ -46,28 +46,6 @@ namespace FoodRescue.API.Controllers
 			return Ok(_mapper.Map<BusinessDTO>(s));
 		}
 
-		// POST api/<BusinessesController>
-		//[HttpPost]
-		//[AllowAnonymous]
-		//public async Task<ActionResult> Post([FromBody] BusinessPostModel value)
-		//{
-		//	if (await _userService.IsUserNameTakenAsync(value.UserName))
-		//	{
-		//		return Conflict("User name already exists");
-		//	}
-
-		//	var user = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Business };
-		//	var createdUser = await _userService.AddUserAsync(user);
-
-		//	var business = _mapper.Map<Business>(value);
-		//	business.User = createdUser;
-		//	business.UserId = createdUser.Id;
-
-		//	await _businessService.AddBusinessAsync(business);
-
-		//	return Ok(); 
-			
-		//}
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]

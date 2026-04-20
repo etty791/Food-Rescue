@@ -46,26 +46,6 @@ namespace FoodRescue.API.Controllers
 			return Ok(_mapper.Map<CharityDTO>(c));
 		}
 
-		// POST api/<BusinessesController>
-		[HttpPost]
-		public async Task<ActionResult> Post([FromBody] CharityPostModel value)
-		{
-			if (await _userService.IsUserNameTakenAsync(value.UserName))
-			{
-				return Conflict("User name already exists");
-			}
-
-			var userEntity = new User { UserName = value.UserName, Password = value.Password, Role = eRole.Charity };
-			var createdUser = await _userService.AddUserAsync(userEntity);
-
-			var charity = _mapper.Map<Charity>(value);
-			charity.User = createdUser;
-			charity.UserId = createdUser.Id;
-
-			await _charityService.AddCharityAsync(charity);
-
-			return Ok();
-		}
 
 		// PUT api/<BusinessesController>/5
 		[HttpPut("{id}")]
